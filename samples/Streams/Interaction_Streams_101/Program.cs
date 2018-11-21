@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Tobii.Interaction;
 
 namespace Interaction_Streams_101
@@ -16,6 +17,8 @@ namespace Interaction_Streams_101
     /// </summary>
     public class Program
     {
+        private const string Format = "{0}\t{1}\t{2}";
+
         public static void Main(string[] args)
         {
             // Everything starts with initializing Host, which manages connection to the 
@@ -26,14 +29,27 @@ namespace Interaction_Streams_101
             // 2. Create stream. 
             var gazePointDataStream = host.Streams.CreateGazePointDataStream();
 
+            // Open file to write data
+            FileStream fs = new FileStream(@"C:\Users\nando\Desktop\gaze_data.txt", FileMode.Append);
+            StreamWriter sw = new StreamWriter(fs);
+
             // 3. Get the gaze data!
-            gazePointDataStream.GazePoint((x, y, ts) => Console.WriteLine("Timestamp: {0}\t X: {1} Y:{2}", ts, x, y));
+            gazePointDataStream.GazePoint((x, y, ts) => {
+                string now = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");                
+                string point = string.Format(Format, (int) x, (int) y, now);
+                sw.WriteLine(point);
+                Console.WriteLine(point);
+            });
 
             // okay, it is 4 lines, but you won't be able to see much without this one :)
             Console.ReadKey();
 
             // we will close the coonection to the Tobii Engine before exit.
             host.DisableConnection();
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
         }
     }
 }
